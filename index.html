@@ -1,10 +1,21 @@
 <!doctype html>
-<html lang="en">
+<html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>rpg-saas-frontend</title>
+    <title>RPG SaaS</title>
+    <script>
+      try {
+        const theme = localStorage.getItem('theme')
+        const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (theme === 'dark' || (theme !== 'light' && systemDark)) {
+          document.documentElement.classList.add('dark')
+        }
+      } catch {
+        /* Storage can be unavailable in private contexts. */
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
