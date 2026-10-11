@@ -5,6 +5,7 @@ import {
   MonitorSmartphoneIcon,
   PackageIcon,
   SettingsIcon,
+  UserCogIcon,
   UsersIcon,
 } from 'lucide-react'
 
@@ -26,6 +27,11 @@ export const navItems: NavItem[] = [
     label: 'Clientes',
     to: '/clientes',
     icon: UsersIcon,
+  },
+  {
+    label: 'Usuários',
+    to: '/usuarios',
+    icon: UserCogIcon,
   },
   {
     label: 'Equipamentos',

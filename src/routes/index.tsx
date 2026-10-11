@@ -5,7 +5,9 @@ import { DashboardLayout } from '@/layouts/DashboardLayout'
 import { navItems } from '@/layouts/DashboardLayout/navigation'
 import { CustomersPage } from '@/pages/Customers'
 import { DashboardPage } from '@/pages/Dashboard'
+import { EquipmentsPage } from '@/pages/Equipments'
 import { LoginPage } from '@/pages/Login'
+import { UsersPage } from '@/pages/Users'
 
 function PrivateRoute() {
   const { user } = useAuth()
@@ -36,8 +38,16 @@ export function AppRoutes() {
       <Route element={<PrivateRoute />}>
         <Route path="/" element={<DashboardPage />} />
         <Route path="/clientes" element={<CustomersPage />} />
+        <Route path="/usuarios" element={<UsersPage />} />
+        <Route path="/equipamentos" element={<EquipmentsPage />} />
         {navItems
-          .filter((item) => item.to !== '/' && item.to !== '/clientes')
+          .filter(
+            (item) =>
+              item.to !== '/' &&
+              item.to !== '/clientes' &&
+              item.to !== '/usuarios' &&
+              item.to !== '/equipamentos',
+          )
           .map((item) => (
             <Route
               key={item.to}
