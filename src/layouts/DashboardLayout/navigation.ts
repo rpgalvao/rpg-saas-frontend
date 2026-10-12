@@ -2,6 +2,7 @@ import type { LucideIcon } from 'lucide-react'
 import {
   ClipboardListIcon,
   LayoutDashboardIcon,
+  ListChecksIcon,
   MonitorSmartphoneIcon,
   PackageIcon,
   SettingsIcon,
@@ -37,6 +38,11 @@ export const navItems: NavItem[] = [
     label: 'Equipamentos',
     to: '/equipamentos',
     icon: MonitorSmartphoneIcon,
+  },
+  {
+    label: 'Checklists',
+    to: '/checklists',
+    icon: ListChecksIcon,
   },
   {
     label: 'Ordens de Serviço',

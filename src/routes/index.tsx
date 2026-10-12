@@ -3,10 +3,14 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { DashboardLayout } from '@/layouts/DashboardLayout'
 import { navItems } from '@/layouts/DashboardLayout/navigation'
+import { ChecklistTemplatesPage } from '@/pages/ChecklistTemplates'
 import { CustomersPage } from '@/pages/Customers'
 import { DashboardPage } from '@/pages/Dashboard'
 import { EquipmentsPage } from '@/pages/Equipments'
+import { InventoryPage } from '@/pages/Inventory'
 import { LoginPage } from '@/pages/Login'
+import { ServiceOrderDetailsPage } from '@/pages/ServiceOrders/Details'
+import { ServiceOrdersPage } from '@/pages/ServiceOrders'
 import { UsersPage } from '@/pages/Users'
 
 function PrivateRoute() {
@@ -40,13 +44,23 @@ export function AppRoutes() {
         <Route path="/clientes" element={<CustomersPage />} />
         <Route path="/usuarios" element={<UsersPage />} />
         <Route path="/equipamentos" element={<EquipmentsPage />} />
+        <Route path="/checklists" element={<ChecklistTemplatesPage />} />
+        <Route path="/estoque" element={<InventoryPage />} />
+        <Route path="/ordens-de-servico" element={<ServiceOrdersPage />} />
+        <Route
+          path="/ordens-de-servico/:id"
+          element={<ServiceOrderDetailsPage />}
+        />
         {navItems
           .filter(
             (item) =>
               item.to !== '/' &&
               item.to !== '/clientes' &&
               item.to !== '/usuarios' &&
-              item.to !== '/equipamentos',
+              item.to !== '/equipamentos' &&
+              item.to !== '/checklists' &&
+              item.to !== '/estoque' &&
+              item.to !== '/ordens-de-servico',
           )
           .map((item) => (
             <Route

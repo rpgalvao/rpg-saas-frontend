@@ -47,6 +47,8 @@ import {
 } from './schema'
 
 const statusBadgeClass: Record<EquipmentStatus, string> = {
+  INSTALADO:
+    'border-violet-500/20 bg-violet-500/10 text-violet-700 dark:text-violet-300',
   RECEBIDO: 'border-border bg-muted text-muted-foreground',
   EM_ANALISE:
     'border-amber-500/20 bg-amber-500/10 text-amber-700 dark:text-amber-300',
