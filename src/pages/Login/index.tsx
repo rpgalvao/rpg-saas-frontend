@@ -1,8 +1,8 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { LoaderCircleIcon, LockKeyholeIcon } from 'lucide-react'
+import { LoaderCircleIcon, ShieldCheckIcon } from 'lucide-react'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { Navigate, useNavigate } from 'react-router-dom'
+import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { z } from 'zod'
 
 import { Button } from '@/components/ui/button'
@@ -83,13 +83,15 @@ export function LoginPage() {
 
       <main className="relative w-full max-w-md">
         <Card className="rounded-2xl shadow-[0_24px_48px_-32px_rgba(0,0,0,0.45)]">
-          <CardHeader className="gap-4">
-            <div className="flex size-11 items-center justify-center rounded-xl border border-border bg-muted text-foreground">
-              <LockKeyholeIcon className="size-5" strokeWidth={1.75} />
-            </div>
+          <CardHeader className="items-center gap-4 text-center">
+            <ShieldCheckIcon
+              className="mx-auto h-12 w-12 justify-self-center text-primary"
+              strokeWidth={1.5}
+              aria-hidden="true"
+            />
             <div className="flex flex-col gap-2">
-              <p className="text-[0.68rem] font-medium tracking-[0.2em] text-muted-foreground uppercase">
-                Acesso
+              <p className="text-[0.68rem] font-medium tracking-[0.22em] text-muted-foreground uppercase">
+                RPG SaaS
               </p>
               <CardTitle className="text-[1.75rem] tracking-tight">
                 Entrar
@@ -144,6 +146,13 @@ export function LoginPage() {
                         />
                       </FormControl>
                       <FormMessage />
+                      <Button
+                        variant="link"
+                        className="h-auto justify-self-end px-0"
+                        asChild
+                      >
+                        <Link to="/forgot-password">Esqueceu sua senha?</Link>
+                      </Button>
                     </FormItem>
                   )}
                 />

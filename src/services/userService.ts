@@ -12,6 +12,16 @@ export type TeamUser = {
   active: boolean
 }
 
+export type UserProfile = {
+  id: string
+  name: string
+  email: string
+  phone: string | null
+  role: UserRole
+  avatar_url: string | null
+  signature_url: string | null
+}
+
 export type CreateUserPayload = {
   name: string
   email: string
@@ -76,6 +86,29 @@ export async function createUser(payload: CreateUserPayload) {
 
   if (!data.success || !data.data) {
     throw new Error('Não foi possível criar o usuário.')
+  }
+
+  return data.data
+}
+
+export async function getUserProfile(id: string) {
+  const { data } = await api.get<ApiSuccess<UserProfile>>(`/user/${id}`)
+
+  if (!data.success || !data.data) {
+    throw new Error('Não foi possível carregar o perfil.')
+  }
+
+  return data.data
+}
+
+export async function updateUserProfile(id: string, formData: FormData) {
+  const { data } = await api.patch<ApiSuccess<UserProfile>>(
+    `/user/${id}`,
+    formData,
+  )
+
+  if (!data.success || !data.data) {
+    throw new Error('Não foi possível atualizar o perfil.')
   }
 
   return data.data

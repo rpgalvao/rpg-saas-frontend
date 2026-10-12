@@ -28,11 +28,14 @@ export type SignInCredentials = {
   password: string
 }
 
+type SessionProfilePatch = Partial<Pick<AuthUser, 'name' | 'avatar_url'>>
+
 type AuthContextValue = {
   user: AuthUser | null
   token: string | null
   signIn: (credentials: SignInCredentials) => Promise<void>
   signOut: () => void
+  updateSession: (patch: SessionProfilePatch) => void
 }
 
 type LoginResponse = {
@@ -154,14 +157,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setSession({ user: null, token: null })
   }, [])
 
+  const updateSession = useCallback((patch: SessionProfilePatch) => {
+    setSession((current) => {
+      if (!current.user) return current
+
+      const user = { ...current.user, ...patch }
+      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user))
+
+      return { ...current, user }
+    })
+  }, [])
+
   const value = useMemo<AuthContextValue>(
     () => ({
       user: session.user,
       token: session.token,
       signIn,
       signOut,
+      updateSession,
     }),
-    [session, signIn, signOut],
+    [session, signIn, signOut, updateSession],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
