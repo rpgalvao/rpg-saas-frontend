@@ -48,6 +48,11 @@ export const tenantFormSchema = z.object({
     const digits = value.replace(/\D/g, '')
     return digits.length === 0 || digits.length === 14
   }, 'Informe um CNPJ válido'),
+  phone: z.string().trim().refine((value) => {
+    const digits = value.replace(/\D/g, '')
+    return digits.length === 0 || digits.length === 10 || digits.length === 11
+  }, 'Informe um telefone válido'),
+  email: z.union([z.literal(''), z.string().email('Informe um e-mail válido')]),
 })
 
 export type TenantFormValues = z.infer<typeof tenantFormSchema>

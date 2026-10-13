@@ -22,7 +22,7 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
-import { formatCnpj } from '@/lib/formatters'
+import { formatCnpj, formatPhone } from '@/lib/formatters'
 import { getApiErrorMessage } from '@/services/userService'
 import { getCurrentTenant, updateTenant } from '@/services/tenantService'
 
@@ -42,6 +42,8 @@ export function TenantTab() {
     defaultValues: {
       name: '',
       cnpj: '',
+      phone: '',
+      email: '',
     },
   })
 
@@ -62,6 +64,8 @@ export function TenantTab() {
         form.reset({
           name: tenant.name,
           cnpj: formatCnpj(tenant.cnpj),
+          phone: formatPhone(tenant.phone),
+          email: tenant.email ?? '',
         })
       } catch (error) {
         if (!cancelled) {
@@ -110,6 +114,11 @@ export function TenantTab() {
       formData.append('name', values.name.trim())
       formData.append('cnpj', values.cnpj.trim())
 
+      const phone = values.phone.trim()
+      if (phone) {
+        formData.append('phone', phone)
+      }
+
       if (logoFile) {
         formData.append('logo', logoFile)
       }
@@ -121,6 +130,8 @@ export function TenantTab() {
       form.reset({
         name: updated.name,
         cnpj: formatCnpj(updated.cnpj),
+        phone: formatPhone(updated.phone),
+        email: updated.email ?? '',
       })
       toast.success('Empresa atualizada.')
     } catch (error) {
@@ -169,7 +180,7 @@ export function TenantTab() {
           <CardHeader>
             <CardTitle>Empresa</CardTitle>
             <CardDescription>
-              Razão social, CNPJ e a marca exibida para a sua equipe.
+              Razão social, contato e a marca exibida para a sua equipe.
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-6">
@@ -213,10 +224,29 @@ export function TenantTab() {
                 control={form.control}
                 name="name"
                 render={({ field }) => (
-                  <FormItem className="sm:col-span-2">
+                  <FormItem>
                     <FormLabel>Razão social</FormLabel>
                     <FormControl>
                       <Input {...field} disabled={isSubmitting} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>E-mail</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        type="email"
+                        autoComplete="email"
+                        disabled
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -237,6 +267,29 @@ export function TenantTab() {
                         disabled={isSubmitting}
                         onChange={(event) =>
                           field.onChange(formatCnpj(event.target.value))
+                        }
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="phone"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Telefone</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        inputMode="tel"
+                        autoComplete="tel"
+                        placeholder="(00) 00000-0000"
+                        disabled={isSubmitting}
+                        onChange={(event) =>
+                          field.onChange(formatPhone(event.target.value))
                         }
                       />
                     </FormControl>
