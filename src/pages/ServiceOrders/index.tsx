@@ -51,6 +51,7 @@ import { SendEmailDialog } from './SendEmailDialog'
 const STATUS_OPTIONS = [
   { value: 'TODOS', label: 'Todos os status' },
   { value: 'ABERTA', label: 'Aberta' },
+  { value: 'ORCAMENTO', label: 'Orçamento' },
   { value: 'FINALIZADA', label: 'Finalizada' },
   { value: 'CANCELADA', label: 'Cancelada' },
 ] as const
@@ -251,7 +252,7 @@ export function ServiceOrdersPage() {
               value={statusFilter}
               onValueChange={(value) => updateParam('status', value)}
             >
-              <SelectTrigger className="w-full sm:w-44" aria-label="Filtrar por status">
+              <SelectTrigger className="w-full sm:w-48" aria-label="Filtrar por status">
                 <FilterIcon className="text-muted-foreground" strokeWidth={1.75} />
                 <SelectValue placeholder="Status" />
               </SelectTrigger>

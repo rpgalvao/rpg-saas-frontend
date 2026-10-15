@@ -31,6 +31,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { useAuth } from '@/contexts/AuthContext'
 import { formatCurrency } from '@/lib/formatters'
 import {
   createPart,
@@ -56,6 +57,9 @@ function isLowStock(part: Part) {
 }
 
 export function PartsTab() {
+  const { user } = useAuth()
+  const isAdmin = user?.role === 'ADMIN'
+  const columnCount = isAdmin ? 7 : 6
   const [parts, setParts] = useState<Part[]>([])
   const [search, setSearch] = useState('')
   const [showInactive, setShowInactive] = useState(false)
@@ -270,10 +274,12 @@ export function PartsTab() {
           >
             {showInactive ? 'Ocultar inativas' : 'Mostrar inativas'}
           </Button>
-          <Button type="button" onClick={openCreateForm}>
-            <PlusIcon />
-            Nova Peça
-          </Button>
+          {isAdmin && (
+            <Button type="button" onClick={openCreateForm}>
+              <PlusIcon />
+              Nova Peça
+            </Button>
+          )}
         </div>
       </div>
 
@@ -299,15 +305,17 @@ export function PartsTab() {
               <TableHead className="px-4 text-xs font-medium tracking-wide text-muted-foreground">
                 Estoque
               </TableHead>
-              <TableHead className="w-32 px-4 text-right text-xs font-medium tracking-wide text-muted-foreground">
-                Ações
-              </TableHead>
+              {isAdmin && (
+                <TableHead className="w-32 px-4 text-right text-xs font-medium tracking-wide text-muted-foreground">
+                  Ações
+                </TableHead>
+              )}
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               <TableRow className="hover:bg-transparent">
-                <TableCell colSpan={7} className="px-4 py-16">
+                <TableCell colSpan={columnCount} className="px-4 py-16">
                   <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
                     <LoaderCircleIcon className="size-4 animate-spin" />
                     Carregando peças
@@ -316,7 +324,7 @@ export function PartsTab() {
               </TableRow>
             ) : loadError ? (
               <TableRow className="hover:bg-transparent">
-                <TableCell colSpan={7} className="px-4 py-16">
+                <TableCell colSpan={columnCount} className="px-4 py-16">
                   <div className="mx-auto flex max-w-sm flex-col items-center gap-3 text-center">
                     <p className="text-sm text-muted-foreground">{loadError}</p>
                     <Button
@@ -332,7 +340,7 @@ export function PartsTab() {
               </TableRow>
             ) : filteredParts.length === 0 ? (
               <TableRow className="hover:bg-transparent">
-                <TableCell colSpan={7} className="px-4 py-16">
+                <TableCell colSpan={columnCount} className="px-4 py-16">
                   <div className="mx-auto flex max-w-sm flex-col items-center gap-3 text-center">
                     <div className="flex size-10 items-center justify-center rounded-lg border border-border bg-muted text-muted-foreground">
                       <PackageIcon className="size-4" strokeWidth={1.75} />
@@ -349,7 +357,7 @@ export function PartsTab() {
                           : 'Tente outro nome ou SKU.'}
                       </p>
                     </div>
-                    {parts.length === 0 ? (
+                    {parts.length === 0 && isAdmin ? (
                       <Button type="button" size="sm" onClick={openCreateForm}>
                         <PlusIcon />
                         Nova Peça
@@ -397,57 +405,59 @@ export function PartsTab() {
                         ) : null}
                       </div>
                     </TableCell>
-                    <TableCell className="px-4">
-                      <div className="flex items-center justify-end gap-1">
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon-sm"
-                          aria-label={`Editar ${part.name}`}
-                          onClick={() => openEditForm(part)}
-                        >
-                          <PencilIcon />
-                        </Button>
-                        {part.active ? (
+                    {isAdmin && (
+                      <TableCell className="px-4">
+                        <div className="flex items-center justify-end gap-1">
                           <Button
                             type="button"
                             variant="ghost"
                             size="icon-sm"
-                            aria-label={`Movimentar ${part.name}`}
-                            onClick={() => openMovement(part)}
+                            aria-label={`Editar ${part.name}`}
+                            onClick={() => openEditForm(part)}
                           >
-                            <ArrowRightLeftIcon />
+                            <PencilIcon />
                           </Button>
-                        ) : null}
-                        {part.active ? (
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon-sm"
-                            className="text-muted-foreground hover:text-destructive"
-                            aria-label={`Inativar ${part.name}`}
-                            onClick={() => setPartToDeactivate(part)}
-                          >
-                            <Trash2Icon />
-                          </Button>
-                        ) : (
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon-sm"
-                            aria-label={`Reativar ${part.name}`}
-                            disabled={reactivatingId === part.id}
-                            onClick={() => void handleReactivate(part)}
-                          >
-                            {reactivatingId === part.id ? (
-                              <LoaderCircleIcon className="animate-spin" />
-                            ) : (
-                              <UserCheckIcon />
-                            )}
-                          </Button>
-                        )}
-                      </div>
-                    </TableCell>
+                          {part.active ? (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon-sm"
+                              aria-label={`Movimentar ${part.name}`}
+                              onClick={() => openMovement(part)}
+                            >
+                              <ArrowRightLeftIcon />
+                            </Button>
+                          ) : null}
+                          {part.active ? (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon-sm"
+                              className="text-muted-foreground hover:text-destructive"
+                              aria-label={`Inativar ${part.name}`}
+                              onClick={() => setPartToDeactivate(part)}
+                            >
+                              <Trash2Icon />
+                            </Button>
+                          ) : (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon-sm"
+                              aria-label={`Reativar ${part.name}`}
+                              disabled={reactivatingId === part.id}
+                              onClick={() => void handleReactivate(part)}
+                            >
+                              {reactivatingId === part.id ? (
+                                <LoaderCircleIcon className="animate-spin" />
+                              ) : (
+                                <UserCheckIcon />
+                              )}
+                            </Button>
+                          )}
+                        </div>
+                      </TableCell>
+                    )}
                   </TableRow>
                 )
               })

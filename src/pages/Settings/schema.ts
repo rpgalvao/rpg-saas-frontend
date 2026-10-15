@@ -44,6 +44,7 @@ export const tenantFormSchema = z.object({
     .string()
     .trim()
     .min(2, 'A razão social precisa ter pelo menos 2 caracteres'),
+  tradeName: z.string().trim(),
   cnpj: z.string().trim().refine((value) => {
     const digits = value.replace(/\D/g, '')
     return digits.length === 0 || digits.length === 14

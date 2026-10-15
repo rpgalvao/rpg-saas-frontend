@@ -15,6 +15,7 @@ import {
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -22,6 +23,7 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
+import { useAuth } from '@/contexts/AuthContext'
 import { formatCnpj, formatPhone } from '@/lib/formatters'
 import { getApiErrorMessage } from '@/services/userService'
 import { getCurrentTenant, updateTenant } from '@/services/tenantService'
@@ -29,6 +31,7 @@ import { getCurrentTenant, updateTenant } from '@/services/tenantService'
 import { tenantFormSchema, type TenantFormValues } from './schema'
 
 export function TenantTab() {
+  const { updateSession } = useAuth()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [tenantId, setTenantId] = useState<string | null>(null)
   const [logoFile, setLogoFile] = useState<File | null>(null)
@@ -41,6 +44,7 @@ export function TenantTab() {
     resolver: zodResolver(tenantFormSchema),
     defaultValues: {
       name: '',
+      tradeName: '',
       cnpj: '',
       phone: '',
       email: '',
@@ -63,6 +67,7 @@ export function TenantTab() {
         setLogoPreview(tenant.logo_url)
         form.reset({
           name: tenant.name,
+          tradeName: tenant.tradeName ?? '',
           cnpj: formatCnpj(tenant.cnpj),
           phone: formatPhone(tenant.phone),
           email: tenant.email ?? '',
@@ -112,6 +117,7 @@ export function TenantTab() {
     try {
       const formData = new FormData()
       formData.append('name', values.name.trim())
+      formData.append('tradeName', values.tradeName.trim())
       formData.append('cnpj', values.cnpj.trim())
 
       const phone = values.phone.trim()
@@ -125,10 +131,19 @@ export function TenantTab() {
 
       const updated = await updateTenant(tenantId, formData)
 
+      updateSession({
+        tenant: {
+          id: updated.id,
+          name: updated.name,
+          tradeName: updated.tradeName,
+          logo_url: updated.logo_url,
+        },
+      })
       setLogoFile(null)
       setLogoPreview(updated.logo_url)
       form.reset({
         name: updated.name,
+        tradeName: updated.tradeName ?? '',
         cnpj: formatCnpj(updated.cnpj),
         phone: formatPhone(updated.phone),
         email: updated.email ?? '',
@@ -180,7 +195,7 @@ export function TenantTab() {
           <CardHeader>
             <CardTitle>Empresa</CardTitle>
             <CardDescription>
-              Razão social, contato e a marca exibida para a sua equipe.
+              Razão social, nome fantasia, contato e a marca exibida para a sua equipe.
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-6">
@@ -219,7 +234,7 @@ export function TenantTab() {
               </div>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid items-start gap-4 sm:grid-cols-2">
               <FormField
                 control={form.control}
                 name="name"
@@ -229,6 +244,27 @@ export function TenantTab() {
                     <FormControl>
                       <Input {...field} disabled={isSubmitting} />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="tradeName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nome fantasia</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        placeholder="Como sua empresa é conhecida"
+                        disabled={isSubmitting}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Exibido no menu lateral para a sua equipe.
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}

@@ -47,7 +47,7 @@ import {
 import { CancelOrderDialog } from '../CancelOrderDialog'
 import { FinishOrderDialog } from '../FinishOrderDialog'
 import { OrderStatusBadge, OrderTypeIcon } from '../OrderMeta'
-import { formatOrderNumber, typeLabel } from '../presentation'
+import { formatOrderNumber, statusLabel, typeLabel } from '../presentation'
 import { ReopenOrderDialog } from '../ReopenOrderDialog'
 import { SendWhatsAppDialog } from '../SendWhatsAppDialog'
 import { ChecklistTab, type ChecklistDraftAnswer } from './ChecklistTab'
@@ -231,7 +231,7 @@ export function ServiceOrderDetailsPage() {
 
     try {
       const pdfUrl = await serviceOrderService.exportPdf(id)
-      const message = `Olá, ${order.customer?.name}!\n\nAqui é da *DWL Diagnóstica*.\nA Ordem de Serviço *#${String(order.number).padStart(4, '0')}* referente ao equipamento *${order.equipment?.model?.name || 'N/A'}* encontra-se com o status: *${order.status}*.\n\nVocê pode baixar o relatório técnico completo acessando o link abaixo:\n🔗 ${pdfUrl}\n\nQualquer dúvida, estamos à disposição!`
+      const message = `Olá, ${order.customer?.name}!\n\nAqui é da *DWL Diagnóstica*.\nA Ordem de Serviço *#${String(order.number).padStart(4, '0')}* referente ao equipamento *${order.equipment?.model?.name || 'N/A'}* encontra-se com o status: *${statusLabel(order.status)}*.\n\nVocê pode baixar o relatório técnico completo acessando o link abaixo:\n🔗 ${pdfUrl}\n\nQualquer dúvida, estamos à disposição!`
       const encodedMessage = encodeURIComponent(message)
       window.open(
         'https://wa.me/55' + cleanPhone + '?text=' + encodedMessage,

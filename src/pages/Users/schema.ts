@@ -8,6 +8,7 @@ import type {
 } from '@/services/userService'
 
 export const roleLabels: Record<TeamUser['role'], string> = {
+  SUPER_ADMIN: 'Super Admin',
   ADMIN: 'Administrador',
   TECHNICIAN: 'Técnico',
 }
@@ -66,7 +67,7 @@ export function toUserFormValues(user?: TeamUser | null): UserFormValues {
     name: user?.name ?? '',
     email: user?.email ?? '',
     phone: formatPhone(user?.phone),
-    role: user?.role ?? 'TECHNICIAN',
+    role: user?.role === 'TECHNICIAN' || !user ? 'TECHNICIAN' : 'ADMIN',
     password: '',
     currentPassword: '',
     newPassword: '',

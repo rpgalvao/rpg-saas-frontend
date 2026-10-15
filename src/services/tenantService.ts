@@ -3,6 +3,7 @@ import { api } from '@/services/api';
 export type Tenant = {
   id: string;
   name: string;
+  tradeName: string | null;
   cnpj: string | null;
   logo_url: string | null;
   phone: string | null;

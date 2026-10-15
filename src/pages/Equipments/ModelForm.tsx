@@ -7,6 +7,7 @@ import {
   Form,
   FormControl,
   FormField,
+  FormDescription,
   FormItem,
   FormLabel,
   FormMessage,
@@ -63,7 +64,7 @@ export function ModelForm({
           </SheetTitle>
           <SheetDescription>
             {model
-              ? 'Atualize o nome deste modelo no catálogo.'
+              ? 'Atualize o nome e a marca deste modelo no catálogo.'
               : 'Cadastre uma família de equipamento suportada.'}
           </SheetDescription>
         </SheetHeader>
@@ -89,6 +90,26 @@ export function ModelForm({
                         disabled={isSubmitting}
                       />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="brand"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Marca</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        placeholder="Ex: Olympus"
+                        autoComplete="off"
+                        disabled={isSubmitting}
+                      />
+                    </FormControl>
+                    <FormDescription>Opcional.</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}

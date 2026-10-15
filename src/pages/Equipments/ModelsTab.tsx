@@ -121,9 +121,13 @@ export function ModelsTab() {
 
     if (!query) return models
 
-    return models.filter((model) =>
-      model.name.toLocaleLowerCase('pt-BR').includes(query),
-    )
+    return models.filter((model) => {
+      const haystack = [model.name, model.brand ?? '']
+        .join(' ')
+        .toLocaleLowerCase('pt-BR')
+
+      return haystack.includes(query)
+    })
   }, [models, search])
 
   function openCreateForm() {
@@ -202,7 +206,7 @@ export function ModelsTab() {
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               type="search"
-              placeholder="Buscar por nome"
+              placeholder="Buscar por nome ou marca"
               aria-label="Buscar modelos"
               className="pl-9"
             />
@@ -235,6 +239,9 @@ export function ModelsTab() {
               <TableHead className="px-4 text-xs font-medium tracking-wide text-muted-foreground">
                 Modelo
               </TableHead>
+              <TableHead className="px-4 text-xs font-medium tracking-wide text-muted-foreground">
+                Marca
+              </TableHead>
               <TableHead className="w-32 px-4 text-xs font-medium tracking-wide text-muted-foreground">
                 Status
               </TableHead>
@@ -246,7 +253,7 @@ export function ModelsTab() {
           <TableBody>
             {isLoading ? (
               <TableRow className="hover:bg-transparent">
-                <TableCell colSpan={3} className="px-4 py-16">
+                <TableCell colSpan={4} className="px-4 py-16">
                   <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
                     <LoaderCircleIcon className="size-4 animate-spin" />
                     Carregando modelos
@@ -255,7 +262,7 @@ export function ModelsTab() {
               </TableRow>
             ) : loadError ? (
               <TableRow className="hover:bg-transparent">
-                <TableCell colSpan={3} className="px-4 py-16">
+                <TableCell colSpan={4} className="px-4 py-16">
                   <div className="mx-auto flex max-w-sm flex-col items-center gap-3 text-center">
                     <p className="text-sm text-muted-foreground">{loadError}</p>
                     <Button
@@ -271,7 +278,7 @@ export function ModelsTab() {
               </TableRow>
             ) : filteredModels.length === 0 ? (
               <TableRow className="hover:bg-transparent">
-                <TableCell colSpan={3} className="px-4 py-16">
+                <TableCell colSpan={4} className="px-4 py-16">
                   <div className="mx-auto flex max-w-sm flex-col items-center gap-3 text-center">
                     <div className="flex size-10 items-center justify-center rounded-lg border border-border bg-muted text-muted-foreground">
                       <CpuIcon className="size-4" strokeWidth={1.75} />
@@ -305,6 +312,9 @@ export function ModelsTab() {
                 >
                   <TableCell className="px-4 font-medium text-foreground">
                     {model.name}
+                  </TableCell>
+                  <TableCell className="px-4 text-muted-foreground">
+                    {model.brand?.trim() || '—'}
                   </TableCell>
                   <TableCell className="px-4">
                     <Badge

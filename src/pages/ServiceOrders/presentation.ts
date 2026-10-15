@@ -2,6 +2,7 @@ import type { ServiceOrderType } from '@/services/serviceOrderService'
 
 export const statusLabels: Record<string, string> = {
   ABERTA: 'Aberta',
+  ORCAMENTO: 'Orçamento',
   FINALIZADA: 'Finalizada',
   CANCELADA: 'Cancelada',
 }
@@ -9,6 +10,8 @@ export const statusLabels: Record<string, string> = {
 export const statusBadgeClass: Record<string, string> = {
   ABERTA:
     'border-amber-500/20 bg-amber-500/10 text-amber-700 dark:text-amber-300',
+  ORCAMENTO:
+    'border-violet-500/20 bg-violet-500/10 text-violet-700 dark:text-violet-300',
   FINALIZADA:
     'border-emerald-500/20 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300',
   CANCELADA: 'border-destructive/20 bg-destructive/10 text-destructive',

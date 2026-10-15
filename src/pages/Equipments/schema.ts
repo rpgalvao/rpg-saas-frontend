@@ -32,21 +32,26 @@ export const modelFormSchema = z.object({
     .string()
     .trim()
     .min(2, 'O nome precisa ter pelo menos 2 caracteres'),
+  brand: z.string().trim(),
 });
 
 export type ModelFormValues = z.infer<typeof modelFormSchema>;
 
 export const emptyModelFormValues: ModelFormValues = {
   name: '',
+  brand: '',
 };
 
 export function toModelFormValues(model: EquipmentModel | null): ModelFormValues {
   if (!model) return emptyModelFormValues;
-  return { name: model.name };
+  return { name: model.name, brand: model.brand ?? '' };
 }
 
 export function toModelPayload(values: ModelFormValues) {
-  return { name: values.name.trim() };
+  return {
+    name: values.name.trim(),
+    brand: values.brand.trim(),
+  };
 }
 
 export const equipmentFormSchema = z.object({

@@ -1,5 +1,6 @@
 import { z } from 'zod'
 
+import { toTitleCase } from '@/lib/formatters'
 import type { Customer, CustomerPayload } from '@/services/customerService'
 
 const optionalText = z.string().trim()
@@ -62,7 +63,7 @@ export function toCustomerFormValues(customer: Customer): CustomerFormValues {
 
 export function toCustomerPayload(values: CustomerFormValues): CustomerPayload {
   const payload: CustomerPayload = {
-    name: values.name.trim(),
+    name: toTitleCase(values.name.trim()),
     city: values.city.trim(),
     state: values.state.trim().toUpperCase(),
   }

@@ -6,6 +6,7 @@ import {
   MonitorSmartphoneIcon,
   PackageIcon,
   SettingsIcon,
+  ShieldCheckIcon,
   UserCogIcon,
   UsersIcon,
 } from 'lucide-react'
@@ -60,6 +61,12 @@ export const navItems: NavItem[] = [
     icon: SettingsIcon,
   },
 ]
+
+export const masterNavItem: NavItem = {
+  label: 'Painel RPG',
+  to: '/rpg-admin',
+  icon: ShieldCheckIcon,
+}
 
 export function isNavItemActive(pathname: string, item: NavItem) {
   if (item.end || item.to === '/') {

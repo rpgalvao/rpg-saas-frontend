@@ -12,10 +12,12 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { useAuth, type UserRole } from '@/contexts/AuthContext'
+import { getInitials } from '@/lib/formatters'
 
-import { isNavItemActive, navItems } from './navigation'
+import { isNavItemActive, masterNavItem, navItems } from './navigation'
 
 const roleLabels: Record<UserRole, string> = {
+  SUPER_ADMIN: 'Super Admin',
   ADMIN: 'Administrador',
   TECHNICIAN: 'Técnico',
 }
@@ -25,19 +27,12 @@ type HeaderProps = {
   onOpenSidebar: () => void
 }
 
-function getInitials(name: string) {
-  const parts = name.trim().split(/\s+/).filter(Boolean)
-
-  if (parts.length === 0) return '?'
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
-
-  return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase()
-}
-
 export function Header({ isSidebarOpen, onOpenSidebar }: HeaderProps) {
   const { pathname } = useLocation()
   const { user, signOut } = useAuth()
-  const currentItem = navItems.find((item) => isNavItemActive(pathname, item))
+  const currentItem = [...navItems, masterNavItem].find((item) =>
+    isNavItemActive(pathname, item),
+  )
 
   return (
     <header className="flex h-14 shrink-0 items-center justify-between gap-3 border-b border-border bg-card px-4 md:px-6">

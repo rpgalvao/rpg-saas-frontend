@@ -2,6 +2,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
   type ReactNode,
@@ -9,10 +10,18 @@ import {
 import axios from 'axios'
 
 import { api, TOKEN_STORAGE_KEY } from '@/services/api'
+import { getCurrentTenant } from '@/services/tenantService'
 
 const USER_STORAGE_KEY = '@rpg-saas:user'
 
-export type UserRole = 'ADMIN' | 'TECHNICIAN'
+export type UserRole = 'SUPER_ADMIN' | 'ADMIN' | 'TECHNICIAN'
+
+export type AuthTenant = {
+  id: string
+  name: string
+  tradeName: string | null
+  logo_url: string | null
+}
 
 export type AuthUser = {
   id: string
@@ -21,6 +30,7 @@ export type AuthUser = {
   role: UserRole
   tenantId: string
   avatar_url: string | null
+  tenant: AuthTenant | null
 }
 
 export type SignInCredentials = {
@@ -28,7 +38,9 @@ export type SignInCredentials = {
   password: string
 }
 
-type SessionProfilePatch = Partial<Pick<AuthUser, 'name' | 'avatar_url'>>
+type SessionProfilePatch = Partial<
+  Pick<AuthUser, 'name' | 'avatar_url' | 'tenant'>
+>
 
 type AuthContextValue = {
   user: AuthUser | null
@@ -53,7 +65,30 @@ type ApiErrorBody = {
 const AuthContext = createContext<AuthContextValue | null>(null)
 
 function isUserRole(value: unknown): value is UserRole {
-  return value === 'ADMIN' || value === 'TECHNICIAN'
+  return value === 'SUPER_ADMIN' || value === 'ADMIN' || value === 'TECHNICIAN'
+}
+
+function parseTenant(value: unknown): AuthTenant | null {
+  if (!value || typeof value !== 'object') return null
+
+  const tenant = value as Record<string, unknown>
+  const logoUrl = tenant.logo_url
+  const tradeName = tenant.tradeName
+
+  if (typeof tenant.id !== 'string' || typeof tenant.name !== 'string') {
+    return null
+  }
+
+  return {
+    id: tenant.id,
+    name: tenant.name,
+    tradeName:
+      typeof tradeName === 'string' && tradeName.trim().length > 0
+        ? tradeName
+        : null,
+    logo_url:
+      typeof logoUrl === 'string' && logoUrl.trim().length > 0 ? logoUrl : null,
+  }
 }
 
 function parseAuthUser(value: unknown): AuthUser | null {
@@ -78,6 +113,7 @@ function parseAuthUser(value: unknown): AuthUser | null {
     role: user.role,
     tenantId: user.tenantId,
     avatar_url: typeof user.avatar_url === 'string' ? user.avatar_url : null,
+    tenant: parseTenant(user.tenant),
   }
 }
 
@@ -124,6 +160,39 @@ function toAuthError(error: unknown) {
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState(readSession)
+
+  useEffect(() => {
+    if (!session.token) return
+
+    let ignore = false
+
+    getCurrentTenant()
+      .then((tenant) => {
+        if (ignore) return
+
+        setSession((current) => {
+          if (!current.user) return current
+
+          const user: AuthUser = {
+            ...current.user,
+            tenant: {
+              id: tenant.id,
+              name: tenant.name,
+              tradeName: tenant.tradeName,
+              logo_url: tenant.logo_url,
+            },
+          }
+
+          localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user))
+          return { ...current, user }
+        })
+      })
+      .catch(() => undefined)
+
+    return () => {
+      ignore = true
+    }
+  }, [session.token])
 
   const signIn = useCallback(async (credentials: SignInCredentials) => {
     try {

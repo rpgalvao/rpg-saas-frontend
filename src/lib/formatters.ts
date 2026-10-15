@@ -73,6 +73,25 @@ export function formatCurrency(value: number | string | null | undefined) {
   }).format(numericValue)
 }
 
+export function getInitials(name: string | null | undefined) {
+  const words = (name ?? '')
+    .split(/\s+/)
+    .map((word) => word.replace(/[^\p{L}\p{N}]/gu, ''))
+    .filter(
+      (word) =>
+        word && !TITLE_CASE_PREPOSITIONS.includes(word.toLocaleLowerCase('pt-BR')),
+    )
+
+  if (words.length === 0) return '?'
+
+  const initials =
+    words.length === 1
+      ? words[0].slice(0, 2)
+      : words[0][0] + words[words.length - 1][0]
+
+  return initials.toLocaleUpperCase('pt-BR')
+}
+
 export function toTitleCase(value: string) {
   return value
     .toLocaleLowerCase('pt-BR')

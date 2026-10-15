@@ -3,7 +3,11 @@ import axios from 'axios'
 import { api } from '@/services/api'
 
 export type ServiceOrderType = 'INSTALACAO' | 'PREVENTIVA' | 'CORRETIVA'
-export type ServiceOrderStatus = 'ABERTA' | 'FINALIZADA' | 'CANCELADA'
+export type ServiceOrderStatus =
+  | 'ABERTA'
+  | 'ORCAMENTO'
+  | 'FINALIZADA'
+  | 'CANCELADA'
 export type ServiceOrderImageTag = 'ANTES' | 'DURANTE' | 'DEPOIS'
 
 export type ChecklistAnswer = {

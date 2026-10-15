@@ -1,6 +1,6 @@
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { Navigate, Outlet, Route, Routes } from 'react-router-dom'
 
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuth, type UserRole } from '@/contexts/AuthContext'
 import { DashboardLayout } from '@/layouts/DashboardLayout'
 import { navItems } from '@/layouts/DashboardLayout/navigation'
 import { ChecklistTemplatesPage } from '@/pages/ChecklistTemplates'
@@ -10,6 +10,7 @@ import { EquipmentsPage } from '@/pages/Equipments'
 import { ForgotPasswordPage } from '@/pages/ForgotPassword'
 import { InventoryPage } from '@/pages/Inventory'
 import { LoginPage } from '@/pages/Login'
+import { MasterPanelPage } from '@/pages/MasterPanel'
 import { ResetPasswordPage } from '@/pages/ResetPassword'
 import { ServiceOrderDetailsPage } from '@/pages/ServiceOrders/Details'
 import { ServiceOrdersPage } from '@/pages/ServiceOrders'
@@ -24,6 +25,16 @@ function PrivateRoute() {
   }
 
   return <DashboardLayout />
+}
+
+function RoleRoute({ allowedRoles }: { allowedRoles: UserRole[] }) {
+  const { user } = useAuth()
+
+  if (!user || !allowedRoles.includes(user.role)) {
+    return <Navigate to="/" replace />
+  }
+
+  return <Outlet />
 }
 
 function SectionPage({ title }: { title: string }) {
@@ -57,6 +68,9 @@ export function AppRoutes() {
           path="/ordens-de-servico/:id"
           element={<ServiceOrderDetailsPage />}
         />
+        <Route element={<RoleRoute allowedRoles={['SUPER_ADMIN']} />}>
+          <Route path="/rpg-admin" element={<MasterPanelPage />} />
+        </Route>
         {navItems
           .filter(
             (item) =>

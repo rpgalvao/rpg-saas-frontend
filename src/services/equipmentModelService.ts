@@ -5,6 +5,7 @@ import { api } from '@/services/api'
 export type EquipmentModel = {
   id: string
   name: string
+  brand: string | null
   active: boolean
   created_at: string
   updated_at: string
@@ -12,6 +13,7 @@ export type EquipmentModel = {
 
 export type EquipmentModelPayload = {
   name: string
+  brand: string
 }
 
 type ApiSuccess<T> = {
