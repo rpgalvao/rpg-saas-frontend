@@ -9,7 +9,12 @@ import {
 } from 'react'
 import axios from 'axios'
 
-import { api, TOKEN_STORAGE_KEY } from '@/services/api'
+import {
+  api,
+  isTenantBlockedError,
+  onTenantBlocked,
+  TOKEN_STORAGE_KEY,
+} from '@/services/api'
 import { getCurrentTenant } from '@/services/tenantService'
 
 const USER_STORAGE_KEY = '@rpg-saas:user'
@@ -21,6 +26,7 @@ export type AuthTenant = {
   name: string
   tradeName: string | null
   logo_url: string | null
+  active: boolean
 }
 
 export type AuthUser = {
@@ -88,6 +94,7 @@ function parseTenant(value: unknown): AuthTenant | null {
         : null,
     logo_url:
       typeof logoUrl === 'string' && logoUrl.trim().length > 0 ? logoUrl : null,
+    active: tenant.active !== false,
   }
 }
 
@@ -143,6 +150,12 @@ function readSession() {
 }
 
 function toAuthError(error: unknown) {
+  if (isTenantBlockedError(error)) {
+    return new Error(
+      'A assinatura da sua empresa está inativa. Entre em contato com a RPG Sistemas.',
+    )
+  }
+
   if (axios.isAxiosError<ApiErrorBody>(error)) {
     const message = error.response?.data?.message
 
@@ -160,6 +173,33 @@ function toAuthError(error: unknown) {
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState(readSession)
+
+  useEffect(
+    () =>
+      onTenantBlocked(() => {
+        setSession((current) => {
+          if (!current.user || current.user.tenant?.active === false) {
+            return current
+          }
+
+          const user: AuthUser = {
+            ...current.user,
+            tenant: {
+              id: current.user.tenantId,
+              name: '',
+              tradeName: null,
+              logo_url: null,
+              ...current.user.tenant,
+              active: false,
+            },
+          }
+
+          localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user))
+          return { ...current, user }
+        })
+      }),
+    [],
+  )
 
   useEffect(() => {
     if (!session.token) return
@@ -180,6 +220,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               name: tenant.name,
               tradeName: tenant.tradeName,
               logo_url: tenant.logo_url,
+              active: tenant.active !== false,
             },
           }
 

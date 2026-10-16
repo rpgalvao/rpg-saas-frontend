@@ -1,17 +1,25 @@
 import { useState } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 
+import { BlockedTenantScreen } from '@/components/BlockedTenantScreen'
+import { useAuth } from '@/contexts/AuthContext'
+
 import { Header } from './Header'
 import { Sidebar } from './Sidebar'
 
 export function DashboardLayout() {
   const { pathname } = useLocation()
+  const { user } = useAuth()
   const [sidebarPath, setSidebarPath] = useState<string | null>(null)
   const isSidebarOpen = sidebarPath === pathname
 
   function closeSidebar() {
     setSidebarPath(null)
     document.getElementById('dashboard-menu-button')?.focus()
+  }
+
+  if (user?.tenant?.active === false && user.role !== 'SUPER_ADMIN') {
+    return <BlockedTenantScreen />
   }
 
   return (

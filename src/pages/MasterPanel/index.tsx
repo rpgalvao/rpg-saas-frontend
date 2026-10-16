@@ -5,6 +5,7 @@ import {
   SearchIcon,
 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { toast } from 'sonner'
 
 import {
@@ -355,9 +356,10 @@ export function MasterPanelPage() {
                 return (
                   <TableRow key={tenant.id}>
                     <TableCell className="px-4">
-                      <div
+                      <Link
+                        to={`/rpg-admin/tenant/${tenant.id}`}
                         className={cn(
-                          'flex min-w-0 items-center gap-3 transition-opacity',
+                          'flex min-w-0 items-center gap-3 transition-opacity hover:opacity-80',
                           !tenant.active && 'opacity-50',
                         )}
                       >
@@ -366,14 +368,15 @@ export function MasterPanelPage() {
                         </span>
                         <span
                           className={cn(
-                            'truncate font-medium text-foreground',
-                            !tenant.active && 'line-through decoration-muted-foreground/40',
+                            'truncate font-medium text-foreground underline-offset-4 hover:underline',
+                            !tenant.active &&
+                              'line-through decoration-muted-foreground/40',
                           )}
                           title={tenant.name}
                         >
                           {tenant.name}
                         </span>
-                      </div>
+                      </Link>
                     </TableCell>
                     <TableCell
                       className={cn(
@@ -381,12 +384,17 @@ export function MasterPanelPage() {
                         !tenant.active && 'opacity-50',
                       )}
                     >
-                      <span
-                        className="block truncate"
-                        title={tenant.tradeName ?? undefined}
-                      >
-                        {tenant.tradeName ?? '—'}
-                      </span>
+                      {tenant.tradeName ? (
+                        <Link
+                          to={`/rpg-admin/tenant/${tenant.id}`}
+                          className="block truncate underline-offset-4 hover:text-foreground hover:underline"
+                          title={tenant.tradeName}
+                        >
+                          {tenant.tradeName}
+                        </Link>
+                      ) : (
+                        <span className="block truncate">—</span>
+                      )}
                     </TableCell>
                     <TableCell
                       className={cn(

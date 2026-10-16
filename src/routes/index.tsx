@@ -11,6 +11,7 @@ import { ForgotPasswordPage } from '@/pages/ForgotPassword'
 import { InventoryPage } from '@/pages/Inventory'
 import { LoginPage } from '@/pages/Login'
 import { MasterPanelPage } from '@/pages/MasterPanel'
+import { TenantDetailsPage } from '@/pages/MasterPanel/TenantDetails'
 import { ResetPasswordPage } from '@/pages/ResetPassword'
 import { ServiceOrderDetailsPage } from '@/pages/ServiceOrders/Details'
 import { ServiceOrdersPage } from '@/pages/ServiceOrders'
@@ -70,6 +71,10 @@ export function AppRoutes() {
         />
         <Route element={<RoleRoute allowedRoles={['SUPER_ADMIN']} />}>
           <Route path="/rpg-admin" element={<MasterPanelPage />} />
+          <Route
+            path="/rpg-admin/tenant/:id"
+            element={<TenantDetailsPage />}
+          />
         </Route>
         {navItems
           .filter(

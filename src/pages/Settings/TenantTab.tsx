@@ -137,6 +137,7 @@ export function TenantTab() {
           name: updated.name,
           tradeName: updated.tradeName,
           logo_url: updated.logo_url,
+          active: updated.active !== false,
         },
       })
       setLogoFile(null)

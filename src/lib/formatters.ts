@@ -62,6 +62,14 @@ export function formatCnpj(value: string | null | undefined) {
     .replace(/(\d{4})(\d{1,2})/, '$1-$2')
 }
 
+export function formatCep(value: string | null | undefined) {
+  if (!value) return ''
+
+  const numbers = value.replace(/\D/g, '').slice(0, 8)
+
+  return numbers.replace(/(\d{5})(\d)/, '$1-$2')
+}
+
 export function formatCurrency(value: number | string | null | undefined) {
   const numericValue = typeof value === 'string' ? Number(value) : value
 

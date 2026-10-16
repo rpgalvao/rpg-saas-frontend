@@ -8,6 +8,7 @@ export type Tenant = {
   logo_url: string | null;
   phone: string | null;
   email: string | null;
+  active?: boolean;
 };
 
 type ApiSuccess<T> = {
