@@ -1,5 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { LoaderCircleIcon } from 'lucide-react'
+import { GaugeIcon, LoaderCircleIcon } from 'lucide-react'
+import type { ReactNode } from 'react'
 import { useEffect, useRef, useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import { toast } from 'sonner'
@@ -33,6 +34,33 @@ import {
   toEditTenantFormValues,
   type EditTenantFormValues,
 } from './schema'
+
+function FormSection({
+  icon,
+  title,
+  description,
+  children,
+}: {
+  icon: ReactNode
+  title: string
+  description?: string
+  children: ReactNode
+}) {
+  return (
+    <section className="flex flex-col gap-4">
+      <div className="flex flex-col gap-1">
+        <div className="flex items-center gap-2 text-xs font-medium tracking-wide text-muted-foreground uppercase">
+          {icon}
+          {title}
+        </div>
+        {description ? (
+          <p className="text-sm text-muted-foreground">{description}</p>
+        ) : null}
+      </div>
+      {children}
+    </section>
+  )
+}
 
 type EditTenantFormProps = {
   open: boolean
@@ -140,7 +168,7 @@ export function EditTenantForm({
             onSubmit={form.handleSubmit(onSubmit)}
             noValidate
           >
-            <div className="flex flex-1 flex-col gap-4 overflow-y-auto px-6 py-5">
+            <div className="flex flex-1 flex-col gap-6 overflow-y-auto px-6 py-5">
               <FormField
                 control={form.control}
                 name="name"
@@ -251,6 +279,44 @@ export function EditTenantForm({
                   />
                 </div>
               </div>
+
+              <div className="border-t border-border" />
+
+              <FormSection
+                icon={<GaugeIcon className="size-3.5" strokeWidth={1.75} />}
+                title="Limites do Plano"
+                description="Define quantos usuários podem estar logados ao mesmo tempo."
+              >
+                <FormField
+                  control={form.control}
+                  name="maxConcurrentUsers"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Limite de acessos simultâneos</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          type="number"
+                          inputMode="numeric"
+                          min={1}
+                          step={1}
+                          className="tabular-nums md:max-w-xs"
+                          disabled={isSubmitting}
+                          value={field.value ?? ''}
+                          onChange={(event) =>
+                            field.onChange(
+                              event.target.value === ''
+                                ? ''
+                                : event.target.valueAsNumber,
+                            )
+                          }
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </FormSection>
 
               <FormField
                 control={form.control}

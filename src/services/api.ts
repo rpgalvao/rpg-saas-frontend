@@ -1,6 +1,7 @@
 import axios from 'axios'
 
 export const TOKEN_STORAGE_KEY = '@rpg-saas:token'
+export const USER_STORAGE_KEY = '@rpg-saas:user'
 
 export const TENANT_BLOCKED_CODE = 'TENANT_BLOCKED'
 
@@ -50,6 +51,17 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(undefined, (error: unknown) => {
   if (isTenantBlockedError(error)) {
     tenantBlockedListeners.forEach((listener) => listener())
+  }
+
+  if (axios.isAxiosError(error) && error.response?.status === 401) {
+    const requestUrl = error.config?.url ?? ''
+
+    // Evita loop quando o próprio /login (ou rotas relacionadas) retorna 401
+    if (!requestUrl.includes('/login')) {
+      localStorage.removeItem(TOKEN_STORAGE_KEY)
+      localStorage.removeItem(USER_STORAGE_KEY)
+      window.location.href = '/login'
+    }
   }
 
   return Promise.reject(error)

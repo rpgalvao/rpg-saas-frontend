@@ -14,10 +14,9 @@ import {
   isTenantBlockedError,
   onTenantBlocked,
   TOKEN_STORAGE_KEY,
+  USER_STORAGE_KEY,
 } from '@/services/api'
 import { getCurrentTenant } from '@/services/tenantService'
-
-const USER_STORAGE_KEY = '@rpg-saas:user'
 
 export type UserRole = 'SUPER_ADMIN' | 'ADMIN' | 'TECHNICIAN'
 

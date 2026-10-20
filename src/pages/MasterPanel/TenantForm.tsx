@@ -1,5 +1,10 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Building2Icon, KeyRoundIcon, LoaderCircleIcon } from 'lucide-react'
+import {
+  Building2Icon,
+  GaugeIcon,
+  KeyRoundIcon,
+  LoaderCircleIcon,
+} from 'lucide-react'
 import type { ReactNode } from 'react'
 import { useEffect, useRef, useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
@@ -349,6 +354,44 @@ export function TenantForm({
                     )}
                   />
                 </div>
+              </FormSection>
+
+              <div className="border-t border-border" />
+
+              <FormSection
+                icon={<GaugeIcon className="size-3.5" strokeWidth={1.75} />}
+                title="Limites do Plano"
+                description="Define quantos usuários podem estar logados ao mesmo tempo."
+              >
+                <FormField
+                  control={form.control}
+                  name="maxConcurrentUsers"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Limite de acessos simultâneos</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          type="number"
+                          inputMode="numeric"
+                          min={1}
+                          step={1}
+                          className="tabular-nums md:max-w-xs"
+                          disabled={isSubmitting}
+                          value={field.value ?? ''}
+                          onChange={(event) =>
+                            field.onChange(
+                              event.target.value === ''
+                                ? ''
+                                : event.target.valueAsNumber,
+                            )
+                          }
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </FormSection>
 
               <div className="border-t border-border" />

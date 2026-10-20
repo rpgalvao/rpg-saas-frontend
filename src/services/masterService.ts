@@ -15,6 +15,16 @@ export type MasterTenantDetails = MasterTenant & {
   municipalRegistration: string | null
   email: string | null
   phone: string | null
+  maxConcurrentUsers: number | null
+}
+
+export type MasterTenantUserRole = 'ADMIN' | 'TECHNICIAN' | 'SUPER_ADMIN'
+
+export type MasterTenantUser = {
+  id: string
+  name: string
+  email: string
+  role: MasterTenantUserRole
 }
 
 export type CreateMasterTenantPayload = {
@@ -24,6 +34,7 @@ export type CreateMasterTenantPayload = {
   address?: string
   stateRegistration?: string
   municipalRegistration?: string
+  maxConcurrentUsers?: number
   adminName: string
   adminEmail: string
   adminPassword: string
@@ -36,6 +47,7 @@ export type UpdateMasterTenantPayload = {
   address?: string | null
   stateRegistration?: string | null
   municipalRegistration?: string | null
+  maxConcurrentUsers?: number
   active?: boolean
 }
 
@@ -88,6 +100,35 @@ function toMasterTenant(value: unknown): MasterTenant | null {
   }
 }
 
+function asPositiveInt(value: unknown): number | null {
+  const numeric =
+    typeof value === 'number'
+      ? value
+      : typeof value === 'string'
+        ? Number(value)
+        : NaN
+
+  if (!Number.isFinite(numeric) || !Number.isInteger(numeric) || numeric < 1) {
+    return null
+  }
+
+  return numeric
+}
+
+function toMasterTenantUserRole(value: unknown): MasterTenantUserRole | null {
+  if (typeof value !== 'string') return null
+
+  const role = value.toLocaleUpperCase('pt-BR')
+
+  if (role === 'ADMIN' || role === 'TECHNICIAN' || role === 'SUPER_ADMIN') {
+    return role
+  }
+
+  if (role === 'TECNICO' || role === 'TÉCNICO') return 'TECHNICIAN'
+
+  return null
+}
+
 function toMasterTenantDetails(value: unknown): MasterTenantDetails | null {
   const base = toMasterTenant(value)
   if (!base || !value || typeof value !== 'object') return null
@@ -105,6 +146,32 @@ function toMasterTenantDetails(value: unknown): MasterTenantDetails | null {
     ),
     email: asString(tenant.email),
     phone: asString(tenant.phone),
+    maxConcurrentUsers: asPositiveInt(
+      tenant.maxConcurrentUsers ?? tenant.max_concurrent_users,
+    ),
+  }
+}
+
+function toMasterTenantUser(value: unknown): MasterTenantUser | null {
+  if (!value || typeof value !== 'object') return null
+
+  const user = value as Record<string, unknown>
+  const role = toMasterTenantUserRole(user.role)
+
+  if (
+    typeof user.id !== 'string' ||
+    typeof user.name !== 'string' ||
+    typeof user.email !== 'string' ||
+    !role
+  ) {
+    return null
+  }
+
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    role,
   }
 }
 
@@ -242,6 +309,20 @@ export async function listMasterPayments(tenantId: string) {
   return data.data
     .map(toMasterPayment)
     .filter((payment): payment is MasterPayment => payment !== null)
+}
+
+export async function listMasterTenantUsers(tenantId: string) {
+  const { data } = await api.get<ApiSuccess<unknown[]>>(
+    `/master/tenants/${tenantId}/users`,
+  )
+
+  if (!data.success || !Array.isArray(data.data)) {
+    throw new Error('Resposta de usuários inválida.')
+  }
+
+  return data.data
+    .map(toMasterTenantUser)
+    .filter((user): user is MasterTenantUser => user !== null)
 }
 
 export async function createMasterPayment(

@@ -122,6 +122,13 @@ export const tenantFormSchema = z.object({
   state: z.string().trim(),
   stateRegistration: z.string().trim(),
   municipalRegistration: z.string().trim(),
+  maxConcurrentUsers: z.coerce
+    .number({
+      required_error: 'Informe o limite de acessos',
+      invalid_type_error: 'Informe o limite de acessos',
+    })
+    .int('O limite deve ser um número inteiro')
+    .min(1, 'O limite deve ser pelo menos 1'),
   adminName: z
     .string()
     .trim()
@@ -147,6 +154,7 @@ export const emptyTenantFormValues: TenantFormValues = {
   state: '',
   stateRegistration: '',
   municipalRegistration: '',
+  maxConcurrentUsers: 1,
   adminName: '',
   adminEmail: '',
   adminPassword: '',
@@ -163,6 +171,7 @@ export function toCreateTenantPayload(
     name: toTitleCase(values.name.trim()),
     tradeName: toTitleCase(values.tradeName.trim()),
     cnpj: values.cnpj.replace(/\D/g, ''),
+    maxConcurrentUsers: values.maxConcurrentUsers,
     adminName: toTitleCase(values.adminName.trim()),
     adminEmail: values.adminEmail.trim().toLowerCase(),
     adminPassword: values.adminPassword,
@@ -197,6 +206,13 @@ export const editTenantFormSchema = z.object({
   state: z.string().trim(),
   stateRegistration: z.string().trim(),
   municipalRegistration: z.string().trim(),
+  maxConcurrentUsers: z.coerce
+    .number({
+      required_error: 'Informe o limite de acessos',
+      invalid_type_error: 'Informe o limite de acessos',
+    })
+    .int('O limite deve ser um número inteiro')
+    .min(1, 'O limite deve ser pelo menos 1'),
   active: z.boolean(),
 })
 
@@ -214,6 +230,7 @@ export function toEditTenantFormValues(
     ...address,
     stateRegistration: tenant.stateRegistration ?? '',
     municipalRegistration: tenant.municipalRegistration ?? '',
+    maxConcurrentUsers: tenant.maxConcurrentUsers ?? 1,
     active: tenant.active,
   }
 }
@@ -228,6 +245,7 @@ export function toUpdateTenantPayload(
     address: buildFullAddress(values) ?? null,
     stateRegistration: values.stateRegistration.trim() || null,
     municipalRegistration: values.municipalRegistration.trim() || null,
+    maxConcurrentUsers: values.maxConcurrentUsers,
     active: values.active,
   }
 }

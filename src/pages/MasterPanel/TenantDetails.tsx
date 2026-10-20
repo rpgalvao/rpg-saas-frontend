@@ -8,6 +8,7 @@ import {
   PlusIcon,
   ReceiptIcon,
   Trash2Icon,
+  UsersIcon,
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
@@ -45,10 +46,13 @@ import {
   deleteMasterPayment,
   getMasterTenant,
   listMasterPayments,
+  listMasterTenantUsers,
   markMasterPaymentAsPaid,
   updateMasterTenant,
   type MasterPayment,
   type MasterTenantDetails,
+  type MasterTenantUser,
+  type MasterTenantUserRole,
   type PaymentStatus,
 } from '@/services/masterService'
 import { getApiErrorMessage } from '@/services/userService'
@@ -89,6 +93,12 @@ const paymentStatusStyles: Record<
   },
 }
 
+const roleLabels: Record<MasterTenantUserRole, string> = {
+  SUPER_ADMIN: 'Super Admin',
+  ADMIN: 'Administrador',
+  TECHNICIAN: 'Técnico',
+}
+
 const headClassName =
   'px-4 text-xs font-medium tracking-wide text-muted-foreground'
 
@@ -120,10 +130,13 @@ export function TenantDetailsPage() {
   const { id } = useParams<{ id: string }>()
   const [tenant, setTenant] = useState<MasterTenantDetails | null>(null)
   const [payments, setPayments] = useState<MasterPayment[]>([])
+  const [users, setUsers] = useState<MasterTenantUser[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isLoadingPayments, setIsLoadingPayments] = useState(true)
+  const [isLoadingUsers, setIsLoadingUsers] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [paymentsError, setPaymentsError] = useState<string | null>(null)
+  const [usersError, setUsersError] = useState<string | null>(null)
   const [isPaymentFormOpen, setIsPaymentFormOpen] = useState(false)
   const [paymentFormSession, setPaymentFormSession] = useState(0)
   const [isSavingPayment, setIsSavingPayment] = useState(false)
@@ -159,6 +172,32 @@ export function TenantDetailsPage() {
       toast.error(message)
     } finally {
       if (!options?.silent) setIsLoadingPayments(false)
+    }
+  }
+
+  async function loadUsers(tenantId: string, options?: { silent?: boolean }) {
+    if (!options?.silent) {
+      setIsLoadingUsers(true)
+      setUsersError(null)
+    }
+
+    try {
+      setUsers(await listMasterTenantUsers(tenantId))
+      setUsersError(null)
+    } catch (error) {
+      const message = getApiErrorMessage(
+        error,
+        'Não foi possível carregar a equipe.',
+      )
+
+      if (!options?.silent) {
+        setUsers([])
+        setUsersError(message)
+      }
+
+      toast.error(message)
+    } finally {
+      if (!options?.silent) setIsLoadingUsers(false)
     }
   }
 
@@ -207,6 +246,27 @@ export function TenantDetailsPage() {
       })
       .finally(() => {
         if (!ignore) setIsLoadingPayments(false)
+      })
+
+    listMasterTenantUsers(id)
+      .then((data) => {
+        if (ignore) return
+        setUsers(data)
+        setUsersError(null)
+      })
+      .catch((error: unknown) => {
+        if (ignore) return
+
+        const message = getApiErrorMessage(
+          error,
+          'Não foi possível carregar a equipe.',
+        )
+        setUsers([])
+        setUsersError(message)
+        toast.error(message)
+      })
+      .finally(() => {
+        if (!ignore) setIsLoadingUsers(false)
       })
 
     return () => {
@@ -398,6 +458,7 @@ export function TenantDetailsPage() {
         <TabsList variant="line">
           <TabsTrigger value="overview">Visão Geral</TabsTrigger>
           <TabsTrigger value="finance">Financeiro</TabsTrigger>
+          <TabsTrigger value="team">Equipe</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="flex flex-col gap-4">
@@ -419,7 +480,7 @@ export function TenantDetailsPage() {
               </div>
             )}
 
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               <InfoItem
                 label="Inscrição Estadual"
                 value={displayValue(tenant.stateRegistration)}
@@ -427,6 +488,14 @@ export function TenantDetailsPage() {
               <InfoItem
                 label="Inscrição Municipal"
                 value={displayValue(tenant.municipalRegistration)}
+              />
+              <InfoItem
+                label="Limite de Acessos"
+                value={
+                  tenant.maxConcurrentUsers != null
+                    ? String(tenant.maxConcurrentUsers)
+                    : '—'
+                }
               />
             </div>
           </section>
@@ -601,6 +670,104 @@ export function TenantDetailsPage() {
                       </TableRow>
                     )
                   })
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="team" className="flex flex-col gap-4">
+          <div className="flex flex-col gap-0.5">
+            <div className="flex items-center gap-2 text-xs font-medium tracking-wide text-muted-foreground uppercase">
+              <UsersIcon className="size-3.5" strokeWidth={1.75} />
+              Usuários cadastrados
+            </div>
+            <p className="text-sm text-muted-foreground">
+              {isLoadingUsers
+                ? 'Carregando...'
+                : `${users.length} ${users.length === 1 ? 'usuário' : 'usuários'}`}
+            </p>
+          </div>
+
+          <div className="overflow-hidden rounded-xl border border-border bg-card">
+            <Table>
+              <TableHeader>
+                <TableRow className="hover:bg-transparent">
+                  <TableHead className={headClassName}>Nome</TableHead>
+                  <TableHead className={headClassName}>E-mail</TableHead>
+                  <TableHead className={headClassName}>
+                    Nível de Acesso
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {isLoadingUsers ? (
+                  <TableRow className="hover:bg-transparent">
+                    <TableCell colSpan={3} className="px-4 py-16">
+                      <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                        <LoaderCircleIcon className="size-4 animate-spin" />
+                        Carregando equipe
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : usersError ? (
+                  <TableRow className="hover:bg-transparent">
+                    <TableCell colSpan={3} className="px-4 py-16">
+                      <div className="mx-auto flex max-w-sm flex-col items-center gap-3 text-center">
+                        <p className="text-sm text-muted-foreground">
+                          {usersError}
+                        </p>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            if (id) void loadUsers(id)
+                          }}
+                        >
+                          Tentar de novo
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : users.length === 0 ? (
+                  <TableRow className="hover:bg-transparent">
+                    <TableCell colSpan={3} className="px-4 py-16">
+                      <div className="mx-auto flex max-w-sm flex-col items-center gap-3 text-center">
+                        <div className="flex size-10 items-center justify-center rounded-lg border border-border bg-muted text-muted-foreground">
+                          <UsersIcon className="size-4" strokeWidth={1.75} />
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <p className="text-sm font-medium tracking-tight">
+                            Nenhum usuário cadastrado
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            A equipe deste cliente ainda não possui contas.
+                          </p>
+                        </div>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  users.map((user) => (
+                    <TableRow key={user.id}>
+                      <TableCell className="px-4 font-medium">
+                        {user.name}
+                      </TableCell>
+                      <TableCell className="px-4 text-muted-foreground">
+                        {user.email}
+                      </TableCell>
+                      <TableCell className="px-4">
+                        <Badge
+                          variant={
+                            user.role === 'ADMIN' ? 'default' : 'secondary'
+                          }
+                        >
+                          {roleLabels[user.role]}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))
                 )}
               </TableBody>
             </Table>
