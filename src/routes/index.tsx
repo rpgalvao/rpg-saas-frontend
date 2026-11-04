@@ -4,6 +4,7 @@ import { useAuth, type UserRole } from '@/contexts/AuthContext'
 import { DashboardLayout } from '@/layouts/DashboardLayout'
 import { navItems } from '@/layouts/DashboardLayout/navigation'
 import { ChecklistTemplatesPage } from '@/pages/ChecklistTemplates'
+import { CRMPage } from '@/pages/CRM'
 import { CustomersPage } from '@/pages/Customers'
 import { DashboardPage } from '@/pages/Dashboard'
 import { EquipmentsPage } from '@/pages/Equipments'
@@ -59,6 +60,7 @@ export function AppRoutes() {
       <Route element={<PrivateRoute />}>
         <Route path="/" element={<DashboardPage />} />
         <Route path="/clientes" element={<CustomersPage />} />
+        <Route path="/crm" element={<CRMPage />} />
         <Route path="/usuarios" element={<UsersPage />} />
         <Route path="/equipamentos" element={<EquipmentsPage />} />
         <Route path="/checklists" element={<ChecklistTemplatesPage />} />
@@ -81,6 +83,7 @@ export function AppRoutes() {
             (item) =>
               item.to !== '/' &&
               item.to !== '/clientes' &&
+              item.to !== '/crm' &&
               item.to !== '/usuarios' &&
               item.to !== '/equipamentos' &&
               item.to !== '/checklists' &&

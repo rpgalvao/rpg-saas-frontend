@@ -1,5 +1,6 @@
 import type { LucideIcon } from 'lucide-react'
 import {
+  BriefcaseIcon,
   ClipboardListIcon,
   LayoutDashboardIcon,
   ListChecksIcon,
@@ -29,6 +30,11 @@ export const navItems: NavItem[] = [
     label: 'Clientes',
     to: '/clientes',
     icon: UsersIcon,
+  },
+  {
+    label: 'CRM / Negócios',
+    to: '/crm',
+    icon: BriefcaseIcon,
   },
   {
     label: 'Usuários',
