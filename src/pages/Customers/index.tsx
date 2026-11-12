@@ -123,6 +123,7 @@ export function CustomersPage() {
         customer.email,
         customer.city,
         customer.state,
+        customer.leadSource,
       ]
         .filter((value): value is string => Boolean(value))
         .join(' ')
@@ -130,8 +131,16 @@ export function CustomersPage() {
 
       if (haystack.includes(query)) return true
 
-      return Boolean(
-        digits && customer.phone?.replace(/\D/g, '').includes(digits),
+      if (!digits) return false
+
+      const phoneDigits = customer.phone?.replace(/\D/g, '') ?? ''
+      const mobileDigits = customer.mobilePhone?.replace(/\D/g, '') ?? ''
+      const documentDigits = customer.document?.replace(/\D/g, '') ?? ''
+
+      return (
+        phoneDigits.includes(digits) ||
+        mobileDigits.includes(digits) ||
+        documentDigits.includes(digits)
       )
     })
   }, [customers, search])

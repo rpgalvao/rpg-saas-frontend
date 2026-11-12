@@ -7,6 +7,10 @@ export type Customer = {
   name: string
   email: string | null
   phone: string | null
+  mobilePhone: string | null
+  document: string | null
+  leadSource: string | null
+  customerType: string | null
   zipcode: string | null
   city: string
   state: string
@@ -26,6 +30,10 @@ export type CustomerPayload = {
   zipcode?: string
   address?: string
   phone?: string
+  mobilePhone?: string
+  document?: string
+  leadSource?: string
+  customerType?: string
   number?: string
   complement?: string
   neighborhood?: string

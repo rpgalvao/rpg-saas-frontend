@@ -90,6 +90,22 @@ export async function createDeal(payload: CreateDealPayload) {
   return data.data
 }
 
+export async function updateDealStatus(
+  dealId: string,
+  payload: { status: 'LOST'; lostReason: string } | { status: 'WON' },
+) {
+  const { data } = await api.patch<ApiSuccess<Deal>>(
+    `/crm/deals/${dealId}/status`,
+    payload,
+  )
+
+  if (!data.success || !data.data) {
+    throw new Error('Não foi possível atualizar o status do negócio.')
+  }
+
+  return data.data
+}
+
 export async function moveDeal(dealId: string, newStageId: string) {
   const { data } = await api.patch<ApiSuccess<Deal>>(
     `/crm/deals/${dealId}/move`,

@@ -26,6 +26,7 @@ import {
   type DealStage,
 } from '@/services/crmService'
 
+import { DealDetailsSheet } from './DealDetailsSheet'
 import { DealForm } from './DealForm'
 import { toCreateDealPayload, type DealFormValues } from './schema'
 
@@ -77,9 +78,11 @@ function moveDealInStages(
 function DealCard({
   deal,
   index,
+  onSelect,
 }: {
   deal: Deal
   index: number
+  onSelect: (deal: Deal) => void
 }) {
   return (
     <Draggable draggableId={deal.id} index={index}>
@@ -87,18 +90,33 @@ function DealCard({
         <article
           ref={provided.innerRef}
           {...provided.draggableProps}
-          {...provided.dragHandleProps}
           className={cn(
             'group rounded-lg border border-border bg-card p-3 shadow-xs transition-shadow',
             snapshot.isDragging && 'shadow-md ring-1 ring-ring/30',
+            !snapshot.isDragging && 'cursor-pointer hover:border-foreground/20',
           )}
+          onClick={() => {
+            if (snapshot.isDragging) return
+            onSelect(deal)
+          }}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              event.preventDefault()
+              onSelect(deal)
+            }
+          }}
+          role="button"
+          tabIndex={0}
         >
           <div className="flex items-start gap-2">
-            <GripVerticalIcon
-              className="mt-0.5 size-3.5 shrink-0 text-muted-foreground/60 opacity-0 transition-opacity group-hover:opacity-100"
-              strokeWidth={1.75}
-              aria-hidden
-            />
+            <div
+              {...provided.dragHandleProps}
+              className="mt-0.5 shrink-0 cursor-grab touch-none text-muted-foreground/60 opacity-0 transition-opacity group-hover:opacity-100 active:cursor-grabbing"
+              aria-label="Arrastar negócio"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <GripVerticalIcon className="size-3.5" strokeWidth={1.75} />
+            </div>
             <div className="min-w-0 flex-1 space-y-2">
               <h3 className="text-sm leading-snug font-medium tracking-tight">
                 {deal.title}
@@ -120,7 +138,13 @@ function DealCard({
   )
 }
 
-function StageColumn({ stage }: { stage: DealStage }) {
+function StageColumn({
+  stage,
+  onSelectDeal,
+}: {
+  stage: DealStage
+  onSelectDeal: (deal: Deal) => void
+}) {
   const totalValue = stage.deals.reduce(
     (sum, deal) => sum + Number(deal.estimatedValue || 0),
     0,
@@ -152,7 +176,12 @@ function StageColumn({ stage }: { stage: DealStage }) {
             )}
           >
             {stage.deals.map((deal, index) => (
-              <DealCard key={deal.id} deal={deal} index={index} />
+              <DealCard
+                key={deal.id}
+                deal={deal}
+                index={index}
+                onSelect={onSelectDeal}
+              />
             ))}
             {provided.placeholder}
             {stage.deals.length === 0 && !snapshot.isDraggingOver ? (
@@ -173,6 +202,7 @@ export function KanbanBoard() {
   const [loadError, setLoadError] = useState<string | null>(null)
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null)
 
   async function loadPipeline(options?: { silent?: boolean }) {
     if (!options?.silent) {
@@ -264,6 +294,11 @@ export function KanbanBoard() {
     }
   }
 
+  function handleCloseDealDetails() {
+    setSelectedDeal(null)
+    void loadPipeline({ silent: true })
+  }
+
   async function handleCreateDeal(values: DealFormValues) {
     const firstStage = stages[0]
 
@@ -338,7 +373,11 @@ export function KanbanBoard() {
         <DragDropContext onDragEnd={(result) => void handleDragEnd(result)}>
           <div className="flex min-h-0 flex-1 gap-3 overflow-x-auto pb-2">
             {stages.map((stage) => (
-              <StageColumn key={stage.id} stage={stage} />
+              <StageColumn
+                key={stage.id}
+                stage={stage}
+                onSelectDeal={setSelectedDeal}
+              />
             ))}
           </div>
         </DragDropContext>
@@ -350,6 +389,14 @@ export function KanbanBoard() {
         onOpenChange={setIsFormOpen}
         onSubmit={handleCreateDeal}
       />
+
+      {selectedDeal ? (
+        <DealDetailsSheet
+          key={selectedDeal.id}
+          deal={selectedDeal}
+          onClose={handleCloseDealDetails}
+        />
+      ) : null}
     </section>
   )
 }

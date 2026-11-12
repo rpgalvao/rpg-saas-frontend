@@ -1,9 +1,19 @@
 import { z } from 'zod'
 
-import { toTitleCase } from '@/lib/formatters'
+import { formatDocument, toTitleCase } from '@/lib/formatters'
 import type { Customer, CustomerPayload } from '@/services/customerService'
 
 const optionalText = z.string().trim()
+
+export const LEAD_SOURCE_OPTIONS = [
+  'Instagram',
+  'Indicação',
+  'Balcão',
+  'Google',
+  'Outros',
+] as const
+
+export type LeadSourceOption = (typeof LEAD_SOURCE_OPTIONS)[number]
 
 export const customerFormSchema = z.object({
   name: z
@@ -23,9 +33,12 @@ export const customerFormSchema = z.object({
         value.length === 0 || z.string().email().safeParse(value).success,
       'Informe um e-mail válido',
     ),
+  document: optionalText,
   zipcode: optionalText,
   address: optionalText,
   phone: optionalText,
+  mobilePhone: optionalText,
+  leadSource: optionalText,
   number: optionalText,
   complement: optionalText,
   neighborhood: optionalText,
@@ -38,9 +51,12 @@ export const emptyCustomerFormValues: CustomerFormValues = {
   city: '',
   state: '',
   email: '',
+  document: '',
   zipcode: '',
   address: '',
   phone: '',
+  mobilePhone: '',
+  leadSource: '',
   number: '',
   complement: '',
   neighborhood: '',
@@ -52,9 +68,12 @@ export function toCustomerFormValues(customer: Customer): CustomerFormValues {
     city: customer.city,
     state: customer.state,
     email: customer.email ?? '',
+    document: formatDocument(customer.document),
     zipcode: customer.zipcode ?? '',
     address: customer.address ?? '',
     phone: customer.phone ?? '',
+    mobilePhone: customer.mobilePhone ?? '',
+    leadSource: customer.leadSource ?? '',
     number: customer.number ?? '',
     complement: customer.complement ?? '',
     neighborhood: customer.neighborhood ?? '',
@@ -68,11 +87,19 @@ export function toCustomerPayload(values: CustomerFormValues): CustomerPayload {
     state: values.state.trim().toUpperCase(),
   }
 
+  const documentDigits = values.document.replace(/\D/g, '')
+
+  if (documentDigits) {
+    payload.document = documentDigits
+  }
+
   const optionalFields = [
     'email',
     'zipcode',
     'address',
     'phone',
+    'mobilePhone',
+    'leadSource',
     'number',
     'complement',
     'neighborhood',

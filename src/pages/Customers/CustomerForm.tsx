@@ -1,7 +1,8 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { LoaderCircleIcon } from 'lucide-react'
-import { useRef } from 'react'
-import { useForm } from 'react-hook-form'
+import { useEffect, useRef, useState } from 'react'
+import { useForm, useWatch } from 'react-hook-form'
+import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -14,6 +15,13 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
   Sheet,
   SheetContent,
   SheetDescription,
@@ -21,14 +29,19 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet'
+import { formatDocument } from '@/lib/formatters'
+import { fetchCompanyByCnpj } from '@/services/brasilApiService'
 import type { Customer } from '@/services/customerService'
 
 import {
   customerFormSchema,
   emptyCustomerFormValues,
+  LEAD_SOURCE_OPTIONS,
   toCustomerFormValues,
   type CustomerFormValues,
 } from './schema'
+
+const NO_LEAD_SOURCE = '__none__'
 
 type CustomerFormProps = {
   open: boolean
@@ -60,6 +73,14 @@ function formatPhone(value: string) {
     .replace(/(\d{5})(\d)/, '$1-$2')
 }
 
+function formatMobilePhone(value: string) {
+  const digits = value.replace(/\D/g, '').slice(0, 11)
+
+  return digits
+    .replace(/(\d{2})(\d)/, '($1) $2')
+    .replace(/(\d{5})(\d)/, '$1-$2')
+}
+
 function formatZipcode(value: string) {
   const digits = value.replace(/\D/g, '').slice(0, 8)
   return digits.replace(/(\d{5})(\d)/, '$1-$2')
@@ -75,6 +96,10 @@ function toTitleCase(value: string) {
     )
 }
 
+function digitsOnly(value: string | null | undefined) {
+  return (value ?? '').replace(/\D/g, '')
+}
+
 export function CustomerForm({
   open,
   customer,
@@ -83,12 +108,92 @@ export function CustomerForm({
   onSubmit,
 }: CustomerFormProps) {
   const zipcodeLookupId = useRef(0)
+  const initialDocumentDigits = digitsOnly(customer?.document)
+  const lastFetchedCnpj = useRef<string | null>(
+    initialDocumentDigits.length === 14 ? initialDocumentDigits : null,
+  )
+  const originalDocumentDigits = useRef(initialDocumentDigits)
+  const [isFetchingCnpj, setIsFetchingCnpj] = useState(false)
+
   const form = useForm<CustomerFormValues>({
     resolver: zodResolver(customerFormSchema),
     defaultValues: customer
       ? toCustomerFormValues(customer)
       : emptyCustomerFormValues,
   })
+
+  const documentValue = useWatch({ control: form.control, name: 'document' })
+  const isBusy = isSubmitting || isFetchingCnpj
+
+  useEffect(() => {
+    const digits = digitsOnly(documentValue)
+
+    if (digits.length !== 14) {
+      lastFetchedCnpj.current = null
+      return
+    }
+
+    if (lastFetchedCnpj.current === digits) return
+
+    let ignore = false
+    lastFetchedCnpj.current = digits
+
+    const forceOverwrite =
+      !customer || digits !== originalDocumentDigits.current
+
+    function applyCompanyValue(
+      field: keyof CustomerFormValues,
+      value: string,
+    ) {
+      if (!value) return
+
+      const current = form.getValues(field)?.trim() ?? ''
+
+      if (!forceOverwrite && current) return
+
+      form.setValue(field, value, {
+        shouldDirty: true,
+        shouldValidate:
+          field === 'name' || field === 'city' || field === 'state',
+      })
+    }
+
+    void (async () => {
+      setIsFetchingCnpj(true)
+
+      try {
+        const company = await fetchCompanyByCnpj(digits)
+
+        if (ignore) return
+
+        applyCompanyValue('name', company.name)
+        applyCompanyValue('zipcode', company.cep)
+        applyCompanyValue('address', company.street)
+        applyCompanyValue('number', company.number)
+        applyCompanyValue('complement', company.complement)
+        applyCompanyValue('neighborhood', company.neighborhood)
+        applyCompanyValue('city', company.city)
+        applyCompanyValue('state', company.state)
+
+        toast.success('Dados do CNPJ preenchidos automaticamente.')
+      } catch (error: unknown) {
+        if (ignore) return
+
+        lastFetchedCnpj.current = null
+        toast.error(
+          error instanceof Error
+            ? error.message
+            : 'Não foi possível consultar o CNPJ.',
+        )
+      } finally {
+        if (!ignore) setIsFetchingCnpj(false)
+      }
+    })()
+
+    return () => {
+      ignore = true
+    }
+  }, [documentValue, customer, form])
 
   async function lookupZipcode(zipcode: string) {
     const digits = zipcode.replace(/\D/g, '')
@@ -139,7 +244,7 @@ export function CustomerForm({
     <Sheet
       open={open}
       onOpenChange={(nextOpen) => {
-        if (isSubmitting) return
+        if (isBusy) return
         onOpenChange(nextOpen)
       }}
     >
@@ -169,6 +274,40 @@ export function CustomerForm({
 
                 <FormField
                   control={form.control}
+                  name="document"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>CPF / CNPJ</FormLabel>
+                      <div className="relative">
+                        <FormControl>
+                          <Input
+                            {...field}
+                            inputMode="numeric"
+                            autoComplete="off"
+                            placeholder="000.000.000-00"
+                            className="tabular-nums pr-10"
+                            disabled={isBusy}
+                            onChange={(event) =>
+                              field.onChange(
+                                formatDocument(event.target.value),
+                              )
+                            }
+                          />
+                        </FormControl>
+                        {isFetchingCnpj ? (
+                          <LoaderCircleIcon
+                            className="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 animate-spin text-muted-foreground"
+                            aria-label="Consultando CNPJ"
+                          />
+                        ) : null}
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
                   name="name"
                   render={({ field }) => (
                     <FormItem>
@@ -178,7 +317,7 @@ export function CustomerForm({
                           {...field}
                           autoComplete="organization"
                           placeholder="Clínica ou empresa"
-                          disabled={isSubmitting}
+                          disabled={isBusy}
                         />
                       </FormControl>
                       <FormMessage />
@@ -200,7 +339,7 @@ export function CustomerForm({
                             inputMode="email"
                             autoComplete="email"
                             placeholder="contato@empresa.com"
-                            disabled={isSubmitting}
+                            disabled={isBusy}
                           />
                         </FormControl>
                         <FormMessage />
@@ -220,12 +359,73 @@ export function CustomerForm({
                             inputMode="tel"
                             autoComplete="tel"
                             placeholder="(00) 00000-0000"
-                            disabled={isSubmitting}
+                            disabled={isBusy}
                             onChange={(event) =>
                               field.onChange(formatPhone(event.target.value))
                             }
                           />
                         </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="mobilePhone"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Celular / WhatsApp</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            inputMode="tel"
+                            autoComplete="tel"
+                            placeholder="(99) 99999-9999"
+                            disabled={isBusy}
+                            onChange={(event) =>
+                              field.onChange(
+                                formatMobilePhone(event.target.value),
+                              )
+                            }
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="leadSource"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Origem do Lead</FormLabel>
+                        <Select
+                          value={field.value || NO_LEAD_SOURCE}
+                          onValueChange={(value) =>
+                            field.onChange(
+                              value === NO_LEAD_SOURCE ? '' : value,
+                            )
+                          }
+                          disabled={isBusy}
+                        >
+                          <FormControl>
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Selecione a origem" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value={NO_LEAD_SOURCE}>
+                              Não informado
+                            </SelectItem>
+                            {LEAD_SOURCE_OPTIONS.map((option) => (
+                              <SelectItem key={option} value={option}>
+                                {option}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -251,7 +451,7 @@ export function CustomerForm({
                             inputMode="numeric"
                             autoComplete="postal-code"
                             placeholder="00000-000"
-                            disabled={isSubmitting}
+                            disabled={isBusy}
                             onChange={(event) => {
                               const zipcode = formatZipcode(event.target.value)
                               field.onChange(zipcode)
@@ -275,7 +475,7 @@ export function CustomerForm({
                             {...field}
                             autoComplete="street-address"
                             placeholder="Rua, avenida..."
-                            disabled={isSubmitting}
+                            disabled={isBusy}
                           />
                         </FormControl>
                         <FormMessage />
@@ -295,7 +495,7 @@ export function CustomerForm({
                           <Input
                             {...field}
                             autoComplete="off"
-                            disabled={isSubmitting}
+                            disabled={isBusy}
                           />
                         </FormControl>
                         <FormMessage />
@@ -314,7 +514,7 @@ export function CustomerForm({
                             {...field}
                             autoComplete="off"
                             placeholder="Sala, bloco..."
-                            disabled={isSubmitting}
+                            disabled={isBusy}
                           />
                         </FormControl>
                         <FormMessage />
@@ -329,7 +529,7 @@ export function CustomerForm({
                       <FormItem>
                         <FormLabel>Bairro</FormLabel>
                         <FormControl>
-                          <Input {...field} disabled={isSubmitting} />
+                          <Input {...field} disabled={isBusy} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -348,7 +548,7 @@ export function CustomerForm({
                           <Input
                             {...field}
                             autoComplete="address-level2"
-                            disabled={isSubmitting}
+                            disabled={isBusy}
                           />
                         </FormControl>
                         <FormMessage />
@@ -368,7 +568,7 @@ export function CustomerForm({
                             maxLength={2}
                             autoComplete="address-level1"
                             className="uppercase"
-                            disabled={isSubmitting}
+                            disabled={isBusy}
                             onChange={(event) =>
                               field.onChange(event.target.value.toUpperCase())
                             }
@@ -386,12 +586,12 @@ export function CustomerForm({
               <Button
                 type="button"
                 variant="outline"
-                disabled={isSubmitting}
+                disabled={isBusy}
                 onClick={() => onOpenChange(false)}
               >
                 Cancelar
               </Button>
-              <Button type="submit" disabled={isSubmitting}>
+              <Button type="submit" disabled={isBusy}>
                 {isSubmitting ? (
                   <>
                     <LoaderCircleIcon className="animate-spin" />
